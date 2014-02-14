@@ -245,7 +245,7 @@ _SSL_get_cipher_info (SSL * ssl)
  * returns zero on success, non-zero on failure.
  * "*.freenode.com" matches "ssl.freenode.com" and "irc.freenode.com" but not "chat.irc.freenode.com"
  */
-static int
+int
 _SSL_verify_cert_hostname (struct server *serv, struct cert_info *cert)
 {
 	int i;
