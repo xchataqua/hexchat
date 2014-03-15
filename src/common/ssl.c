@@ -494,7 +494,7 @@ _SSL_certlist_save ()
 	ssl_certlist_item *item;
 	FILE *fh;
 	
-	fh = hexchat_fopen_file ("sslcerts.save", "w", 0);
+	fh = hexchat_fopen_file ("sslcerts.conf", "w", 0);
 	if (fh)
 	{
 		list = ssl_certlist;
