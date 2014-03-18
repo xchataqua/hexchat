@@ -56,12 +56,10 @@
 #include "text.h"
 #include "url.h"
 #include "hexchatc.h"
+#include <gio/gio.h>
 
 #ifdef USE_DCC64
 #define BIG_STR_TO_INT(x) strtoull(x,NULL,10)
-#ifdef WIN32
-#define stat _stat64
-#endif
 #else
 #define BIG_STR_TO_INT(x) strtoul(x,NULL,10)
 #endif
@@ -1775,7 +1773,8 @@ void
 dcc_send (struct session *sess, char *to, char *file, int maxcps, int passive)
 {
 	char outbuf[512];
-	GStatBuf st;
+	GFileInfo *fi = NULL;
+	GFile *gf = NULL;
 	struct DCC *dcc;
 
 	file = expand_homedir (file);
@@ -1812,18 +1811,21 @@ dcc_send (struct session *sess, char *to, char *file, int maxcps, int passive)
 	dcc->file = file;
 	dcc->maxcps = maxcps;
 
-	if (g_stat (file, &st) != -1)
+	/* FIXME: ensure that filename is in "glib filename encoding" */
+	gf = g_file_new_for_path (file);
+	fi = g_file_query_info (gf, G_FILE_ATTRIBUTE_STANDARD_SIZE "," G_FILE_ATTRIBUTE_STANDARD_TYPE, G_FILE_QUERY_INFO_NONE, NULL, NULL);
+	if (fi)
 	{
 
 #ifndef USE_DCC64
-		if (sizeof (st.st_size) > 4 && st.st_size > 4294967295U)
+		if (g_file_info_get_size (fi) > 4294967295U)
 		{
 			PrintText (sess, "Cannot send files larger than 4 GB.\n");
 			goto xit;
 		}
 #endif
 
-		if (!(*file_part (file)) || S_ISDIR (st.st_mode) || st.st_size < 1)
+		if (!(*file_part (file)) || g_file_info_get_file_type (fi) == G_FILE_TYPE_DIRECTORY || g_file_info_get_size (fi) < 1)
 		{
 			PrintText (sess, "Cannot send directories or empty files.\n");
 			goto xit;
@@ -1832,7 +1834,7 @@ dcc_send (struct session *sess, char *to, char *file, int maxcps, int passive)
 		dcc->starttime = dcc->offertime = time (0);
 		dcc->serv = sess->server;
 		dcc->dccstat = STAT_QUEUED;
-		dcc->size = st.st_size;
+		dcc->size = g_file_info_get_size (fi);
 		dcc->type = TYPE_SEND;
 		dcc->fp = g_open (file, OFLAGS | O_RDONLY, 0);
 		if (dcc->fp != -1)
@@ -1884,12 +1886,20 @@ dcc_send (struct session *sess, char *to, char *file, int maxcps, int passive)
 			{
 				dcc_close (dcc, 0, TRUE);
 			}
+			if (fi)
+				g_object_unref (fi);
+			if (gf)
+				g_object_unref (gf);
 			return;
 		}
 	}
 	PrintTextf (sess, _("Cannot access %s\n"), dcc->file);
 	PrintTextf (sess, "%s %d: %s\n", _("Error"), errno, errorstring (errno));
 xit:
+	if (fi)
+		g_object_unref (fi);
+	if (gf)
+		g_object_unref (gf);
 	dcc_close (dcc, 0, TRUE);		/* dcc_close will free dcc->file */
 }
 
@@ -1979,31 +1989,53 @@ dcc_change_nick (struct server *serv, char *oldnick, char *newnick)
 static int
 is_same_file (struct DCC *dcc, struct DCC *new_dcc)
 {
-#ifndef WIN32
-	GStatBuf st_a, st_b;
-#endif
+	int result;
+	GFileInfo *fi_a = NULL, *fi_b = NULL;
+	GFile *gf_a = NULL, *gf_b = NULL;
+	char *id_a = NULL, *id_b = NULL, *fs_a = NULL, *fs_b = NULL;
 
 	/* if it's the same filename, must be same */
 	if (strcmp (dcc->destfile, new_dcc->destfile) == 0)
 		return TRUE;
 
-	/* now handle case-insensitive Filesystems: HFS+, FAT */
-#ifdef WIN32
-	/* warning no win32 implementation - behaviour may be unreliable */
-#else
-	/* this fstat() shouldn't really fail */
-	if ((dcc->fp == -1 ? g_stat (dcc->destfile, &st_a) : fstat (dcc->fp, &st_a)) == -1)
+	/* FIXME: ensure that filename is in "glib filename encoding" */
+	gf_a = g_file_new_for_path (dcc->destfile);
+	fi_a = g_file_query_info (gf_a, G_FILE_ATTRIBUTE_ID_FILE "," G_FILE_ATTRIBUTE_ID_FILESYSTEM,
+							G_FILE_QUERY_INFO_NONE, NULL, NULL);
+	if (!fi_a)
+	{
+		g_object_unref (gf_a);
 		return FALSE;
-	if (g_stat (new_dcc->destfile, &st_b) == -1)
+	}
+	gf_b = g_file_new_for_path (new_dcc->destfile);
+	fi_b = g_file_query_info (gf_b, G_FILE_ATTRIBUTE_ID_FILE "," G_FILE_ATTRIBUTE_ID_FILESYSTEM,
+							G_FILE_QUERY_INFO_NONE, NULL, NULL);
+	if (!fi_b)
+	{
+		g_object_unref (gf_b);
+		g_object_unref (fi_a);
+		g_object_unref (gf_a);
 		return FALSE;
+	}
 
-	/* same inode, same device, same file! */
-	if (st_a.st_ino == st_b.st_ino &&
-		 st_a.st_dev == st_b.st_dev)
-		return TRUE;
-#endif
+	id_a = g_file_info_get_attribute_as_string (fi_a, G_FILE_ATTRIBUTE_ID_FILE);
+	id_b = g_file_info_get_attribute_as_string (fi_b, G_FILE_ATTRIBUTE_ID_FILE);
+	fs_a = g_file_info_get_attribute_as_string (fi_a, G_FILE_ATTRIBUTE_ID_FILESYSTEM);
+	fs_b = g_file_info_get_attribute_as_string (fi_b, G_FILE_ATTRIBUTE_ID_FILESYSTEM);
 
-	return FALSE;
+	result = FALSE;
+	if (fs_a && fs_b && id_a && id_b && strcmp (id_a, id_b) == 0 && strcmp (fs_a, fs_b) == 0)
+		result = TRUE;
+
+	g_free (id_a);
+	g_free (id_b);
+	g_free (fs_a);
+	g_free (fs_b);
+	g_object_unref (fi_b);
+	g_object_unref (gf_b);
+	g_object_unref (fi_a);
+	g_object_unref (gf_a);
+ 	return result;
 }
 
 static int
