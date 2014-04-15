@@ -31,7 +31,6 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <openssl/sha.h>
 #include <glib.h>
 
 #ifdef WIN32
@@ -51,51 +50,32 @@
 
 #define BUFSIZE 32768
 #define DEFAULT_LIMIT 256									/* default size is 256 MiB */
+#define SHA256_DIGEST_LENGTH 32
 
 static hexchat_plugin *ph;									/* plugin handle */
 static char name[] = "Checksum";
 static char desc[] = "Calculate checksum for DCC file transfers";
-static char version[] = "3.1";
+static char version[] = "4.0";
 
-/* Use of OpenSSL SHA256 interface: http://adamlamers.com/?p=5 */
 static void
-sha256_hash_string (unsigned char hash[SHA256_DIGEST_LENGTH], char outputBuffer[65])
+sha256_hash_string (guint8 digest[], gsize digest_len, char outputBuffer[65])
 {
 	int i;
-	for (i = 0; i < SHA256_DIGEST_LENGTH; i++)
+	for (i = 0; i < digest_len; i++)
 	{
-		sprintf (outputBuffer + (i * 2), "%02x", hash[i]);
+		sprintf (outputBuffer + (i * 2), "%02x", digest[i]);
 	}
 	outputBuffer[64] = 0;
 }
-
-#if 0
-static void
-sha256 (char *string, char outputBuffer[65])
-{
-	int i;
-	unsigned char hash[SHA256_DIGEST_LENGTH];
-	SHA256_CTX sha256;
-
-	SHA256_Init (&sha256);
-	SHA256_Update (&sha256, string, strlen (string));
-	SHA256_Final (hash, &sha256);
-
-	for (i = 0; i < SHA256_DIGEST_LENGTH; i++)
-	{
-		sprintf (outputBuffer + (i * 2), "%02x", hash[i]);
-	}
-	outputBuffer[64] = 0;
-}
-#endif
 
 static int
 sha256_file (char *path, char outputBuffer[65])
 {
-	int bytesRead;
 	unsigned char *buffer;
-	unsigned char hash[SHA256_DIGEST_LENGTH];
-	SHA256_CTX sha256;
+	guint8 digest[SHA256_DIGEST_LENGTH];
+	gsize digest_len = sizeof(digest);
+	gsize bytesRead;
+	GChecksum *checksum;
 
 	FILE *file = fopen (path, "rb");
 	if (!file)
@@ -103,7 +83,6 @@ sha256_file (char *path, char outputBuffer[65])
 		return -534;
 	}
 
-	SHA256_Init (&sha256);
 	buffer = malloc (BUFSIZE);
 	bytesRead = 0;
 
@@ -113,14 +92,17 @@ sha256_file (char *path, char outputBuffer[65])
 		return ENOMEM;
 	}
 
+	checksum = g_checksum_new (G_CHECKSUM_SHA256);
+
 	while ((bytesRead = fread (buffer, 1, BUFSIZE, file)))
 	{
-		SHA256_Update (&sha256, buffer, bytesRead);
+		g_checksum_update (checksum, buffer, bytesRead);
 	}
 
-	SHA256_Final (hash, &sha256);
-	sha256_hash_string (hash, outputBuffer);
+	g_checksum_get_digest (checksum, digest, &digest_len);
+	sha256_hash_string (digest, digest_len, outputBuffer);
 
+	g_checksum_free (checksum);
 	fclose (file);
 	free (buffer);
 	return 0;
