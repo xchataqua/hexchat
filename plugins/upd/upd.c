@@ -37,6 +37,35 @@ static char desc[] = "Check for HexChat updates automatically";
 static char version[] = "4.0";
 static const char upd_help[] = "Update Checker Usage:\n  /UPDCHK, check for HexChat updates\n  /UPDCHK SET delay|freq, set startup delay or check frequency\n";
 
+/**
+ * Returns: -1 on error
+ *           1 on new version
+ *           0 on equal or lower version
+ */
+static int
+compare_version (char *version)
+{
+	int major, minor, micro;
+	int cur_major, cur_minor, cur_micro;
+
+	if (strcmp (version, "Unknown") == 0)
+		return -1;
+
+	if (sscanf (version, "%d.%d.%d", &major, &minor, &micro) != 3)
+		return -1;
+
+	if (sscanf (hexchat_get_info (ph, "version"), "%d.%d.%d",
+			&cur_major, &cur_minor, &cur_micro) != 3)
+		return -1;
+
+	if (cur_major > (major)
+		|| (cur_major == (major) && cur_minor > (minor))
+		|| (cur_major == (major) && cur_minor == (minor) && cur_micro >= (micro)))
+		return 0;
+
+	return 1;
+}
+
 static char*
 check_version ()
 {
@@ -179,12 +208,13 @@ print_version (char *word[], char *word_eol[], void *userdata)
 	else if (!g_ascii_strcasecmp ("", word[2]))
 	{
 		version = check_version ();
+		int compare_ret = compare_version (version);
 
-		if (strcmp (version, hexchat_get_info (ph, "version")) == 0)
+		if (compare_ret == 0)
 		{
 			hexchat_printf (ph, "%s\tYou have the latest version of HexChat installed!\n", name);
 		}
-		else if (strcmp (version, "Unknown") == 0)
+		else if (compare_ret == -1)
 		{
 			hexchat_printf (ph, "%s\tUnable to check for HexChat updates!\n", name);
 		}
@@ -211,7 +241,7 @@ print_version_quiet (void *userdata)
 	char *version = check_version ();
 
 	/* if it's not the current version AND not network error */
-	if (!(strcmp (version, hexchat_get_info (ph, "version")) == 0) && !(strcmp (version, "Unknown") == 0))
+	if (compare_version (version) == 1)
 	{
 #ifdef _WIN64 /* use this approach, the wProcessorArchitecture method always returns 0 (=x86) for plugins for some reason */
 		hexchat_printf (ph, "%s\tA HexChat update is available! You can download it from here:\n%s/HexChat%%20%s%%20x64.exe\n", name, DOWNLOAD_URL, version);
