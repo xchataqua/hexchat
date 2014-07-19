@@ -79,7 +79,7 @@ ignore_exists (char *mask)
 int
 ignore_add (char *mask, int type, gboolean overwrite)
 {
-	struct ignore *ig = 0;
+	struct ignore *ig = NULL;
 	int change_only = FALSE;
 
 	/* first check if it's already ignored */

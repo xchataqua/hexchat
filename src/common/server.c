@@ -1849,6 +1849,8 @@ server_new (void)
 	server *serv;
 
 	serv = calloc (1, sizeof (struct server));
+	if (!serv)
+		return NULL;
 
 	/* use server.c and proto-irc.c functions */
 	server_fill_her_up (serv);

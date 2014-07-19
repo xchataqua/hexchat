@@ -398,6 +398,8 @@ userlist_add (struct session *sess, char *name, char *hostname,
 	notify_set_online (sess->server, name + prefix_chars, tags_data);
 
 	user = calloc (1, sizeof (struct User));
+	if (!user)
+		return;
 
 	user->access = acc;
 

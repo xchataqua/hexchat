@@ -555,6 +555,8 @@ servlist_favchan_copy (favchannel *fav)
 	favchannel *newfav;
 
 	newfav = calloc (1, sizeof (favchannel));
+	if (!newfav)
+		return NULL;
 
 	newfav->name = g_strdup (fav->name);
 	newfav->key = g_strdup (fav->key);		/* g_strdup() can handle NULLs so no need to check it */
@@ -912,6 +914,8 @@ servlist_server_add (ircnet *net, char *name)
 	ircserver *serv;
 
 	serv = calloc (1, sizeof (ircserver));
+	if (!serv)
+		return NULL;
 	serv->hostname = strdup (name);
 
 	net->servlist = g_slist_append (net->servlist, serv);
@@ -925,6 +929,8 @@ servlist_command_add (ircnet *net, char *cmd)
 	commandentry *entry;
 
 	entry = calloc (1, sizeof (commandentry));
+	if (!entry)
+		return NULL;
 	entry->command = strdup (cmd);
 
 	net->commandlist = g_slist_append (net->commandlist, entry);
@@ -938,6 +944,8 @@ servlist_favchan_listadd (GSList *chanlist, char *channel, char *key)
 	favchannel *chan;
 
 	chan = calloc (1, sizeof (favchannel));
+	if (!chan)
+		return NULL;
 
 	chan->name = g_strdup (channel);
 	chan->key = g_strdup (key);
@@ -1095,6 +1103,8 @@ servlist_net_add (char *name, char *comment, int prepend)
 	ircnet *net;
 
 	net = calloc (1, sizeof (ircnet));
+	if (!net)
+		return NULL;
 	net->name = strdup (name);
 /*	net->comment = strdup (comment);*/
 	net->flags = FLAG_CYCLE | FLAG_USE_GLOBAL | FLAG_USE_PROXY;

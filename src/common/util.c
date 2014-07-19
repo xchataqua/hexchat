@@ -1652,7 +1652,7 @@ char *
 encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 {
 	DH *dh;
-	char *response, *ret;
+	char *response, *ret = NULL;
 	unsigned char *secret;
 	unsigned char *encrypted_pass;
 	char *plain_pass;
@@ -1669,6 +1669,13 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 
 	encrypted_pass = calloc (pass_len, sizeof (unsigned char));
 	plain_pass = (char*)malloc (pass_len);
+	if (!encrypted_pass || !plain_pass)
+	{
+		DH_free(dh);
+		free(secret);
+		return NULL;
+	}
+
 	memcpy (plain_pass, pass, pass_len);
 	out_ptr = (char*)encrypted_pass;
 	in_ptr = (char*)plain_pass;
@@ -1679,6 +1686,10 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	/* Create response */
 	length = 2 + BN_num_bytes (dh->pub_key) + pass_len + user_len + 1;
 	response = calloc (length, sizeof (char));
+
+	if (!response)
+		goto cleanup;
+
 	out_ptr = response;
 
 	/* our key */
@@ -1697,11 +1708,13 @@ encode_sasl_pass_blowfish (char *user, char *pass, char *data)
 	
 	ret = g_base64_encode ((const guchar*)response, length);
 
-	DH_free (dh);
+	free (response);
+
+cleanup:
+	DH_free(dh);
 	free (plain_pass);
 	free (encrypted_pass);
 	free (secret);
-	free (response);
 
 	return ret;
 }
@@ -1729,6 +1742,12 @@ encode_sasl_pass_aes (char *user, char *pass, char *data)
 
 	encrypted_userpass = calloc (userpass_len, sizeof (unsigned char));
 	plain_userpass = calloc (userpass_len, sizeof (unsigned char));
+	if (!encrypted_userpass && !plain_userpass)
+	{
+		DH_free(dh);
+		free(secret);
+		return NULL;
+	}
 
 	/* create message */
 	/* format of: <username>\0<password>\0<padding> */
