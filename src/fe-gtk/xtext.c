@@ -4957,8 +4957,7 @@ gtk_xtext_buffer_new (GtkXText *xtext)
 {
 	xtext_buffer *buf;
 
-	buf = malloc (sizeof (xtext_buffer));
-	memset (buf, 0, sizeof (xtext_buffer));
+	buf = calloc (1, sizeof (xtext_buffer));
 	buf->old_value = -1;
 	buf->xtext = xtext;
 	buf->scrollbar_down = TRUE;

@@ -297,8 +297,7 @@ ignore_load ()
 			my_cfg = cfg;
 			while (my_cfg)
 			{
-				ignore = malloc (sizeof (struct ignore));
-				memset (ignore, 0, sizeof (struct ignore));
+				ignore = calloc (1, sizeof (struct ignore));
 				if ((my_cfg = ignore_read_next_entry (my_cfg, ignore)))
 					ignore_list = g_slist_prepend (ignore_list, ignore);
 				else
