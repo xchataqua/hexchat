@@ -2073,6 +2073,8 @@ pevt_build_string (const char *input, char **output, int *max_arg)
 		*max_arg = max;
 	if (output)
 		*output = obuf;
+	else
+		g_free (obuf);
 
 	return 0;
 
@@ -2080,8 +2082,6 @@ err:
 	while (s)
 	{
 		next = s->next;
-		memcpy (&obuf[oi], s->data, s->len);
-		oi += s->len;
 		g_free (s->data);
 		g_free (s);
 		s = next;
