@@ -1697,7 +1697,7 @@ gtk_xtext_get_word_adjust (GtkXText *xtext, int x, int y, textentry **word_ent, 
 			}
 		}
 	}
-	g_slist_free_full (slp, free);
+	g_slist_free_full (slp, g_free);
 
 	return word_type;
 }
@@ -4209,7 +4209,7 @@ gtk_xtext_search_textentry (xtext_buffer *buf, textentry *ent)
 	}
 
 	/* Common processing --- */
-	g_slist_free_full (slp, free);
+	g_slist_free_full (slp, g_free);
 	return gl;
 }
 
