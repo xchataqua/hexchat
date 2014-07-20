@@ -318,7 +318,7 @@ fe_print_text (struct session *sess, char *text, time_t stamp,
 	int dotime = FALSE;
 	int comma, k, i = 0, j = 0, len = strlen (text);
 
-	unsigned char *newtext = malloc (len + 1024);
+	unsigned char *newtext = g_malloc (len + 1024);
 
 	if (prefs.hex_stamp_text)
 	{
@@ -402,7 +402,7 @@ fe_print_text (struct session *sess, char *text, time_t stamp,
 
 	newtext[j] = 0;
 	write (STDOUT_FILENO, newtext, j);
-	free (newtext);
+	g_free (newtext);
 }
 #endif
 
