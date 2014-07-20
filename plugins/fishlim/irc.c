@@ -76,8 +76,7 @@ char *irc_prefix_get_nick(const char *prefix) {
     
     // Allocate string
     length = end - prefix;
-    nick = malloc(length+1);
-    if (!nick) return NULL;
+    nick = g_malloc(length + 1);
     
     // Copy to string
     memcpy(nick, prefix, length);

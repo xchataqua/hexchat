@@ -27,7 +27,6 @@
 #include <string.h>
 #include "irc.h"
 #include "fish.h"
-#include "misc.h"
 #include "keystore.h"
 #include "plugin_hexchat.h"
 
@@ -95,7 +94,7 @@ char *keystore_get_key(const char *nick) {
     
     if (strncmp(value, "+OK ", 4) != 0) {
         // Key is stored in plaintext
-        return import_glib_string(value);
+        return value;
     } else {
         // Key is encrypted
         const char *encrypted = value+4;
@@ -199,11 +198,3 @@ bool keystore_delete_nick(const char *nick) {
     g_key_file_free(keyfile);
     return ok;
 }
-
-
-void keystore_secure_free(void *ptr, size_t size) {
-    secure_erase(ptr, size);
-    free(ptr);
-}
-
-
