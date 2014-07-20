@@ -1843,7 +1843,7 @@ gtk_xtext_set_clip_owner (GtkWidget * xtext, GdkEventButton * event)
 			gtk_selection_owner_set (xtext, GDK_SELECTION_SECONDARY, event ? event->time : GDK_CURRENT_TIME);
 		}
 
-		free (str);
+		g_free (str);
 	}
 }
 
@@ -2204,7 +2204,7 @@ gtk_xtext_selection_get (GtkWidget * widget,
 		g_free (new_text);
 	}
 
-	free (stripped);
+	g_free (stripped);
 }
 
 static gboolean
@@ -2382,7 +2382,7 @@ gtk_xtext_strip_color (unsigned char *text, int len, unsigned char *outbuf,
 	int mbl;	/* multi-byte length */
 
 	if (outbuf == NULL)
-		new_str = malloc (len + 2);
+		new_str = g_malloc (len + 2);
 	else
 		new_str = outbuf;
 
@@ -2458,7 +2458,7 @@ bad_utf8:		/* Normal ending sequence, and give up if bad utf8 */
 	if (slpp)
 		*slpp = c.slp;
 	else
-		g_slist_free_full (c.slp, free);
+		g_slist_free_full (c.slp, g_free);
 
 	return new_str;
 }
@@ -2506,7 +2506,7 @@ gtk_xtext_text_width (GtkXText *xtext, unsigned char *text, int len)
 												&new_len, &slp, !xtext->ignore_hidden);
 
 	width =  backend_get_text_width_slp (xtext, new_buf, slp);
-	g_slist_free_full (slp, free);
+	g_slist_free_full (slp, g_free);
 
 	return width;
 }
@@ -3529,7 +3529,7 @@ gtk_xtext_save (GtkXText * xtext, int fh)
 											  &newlen, NULL, FALSE);
 		write (fh, buf, newlen);
 		write (fh, "\n", 1);
-		free (buf);
+		g_free (buf);
 		ent = ent->next;
 	}
 }
@@ -3894,10 +3894,10 @@ gtk_xtext_kill_ent (xtext_buffer *buffer, textentry *ent)
 		gtk_xtext_search_textentry_del (buffer, ent);
 	}
 
-	g_slist_free_full (ent->slp, free);
+	g_slist_free_full (ent->slp, g_free);
 	g_slist_free (ent->sublines);
 
-	free (ent);
+	g_free (ent);
 	return visible;
 }
 
@@ -4032,7 +4032,7 @@ gtk_xtext_clear (xtext_buffer *buf, int lines)
 		while (buf->text_first)
 		{
 			next = buf->text_first->next;
-			free (buf->text_first);
+			g_free (buf->text_first);
 			buf->text_first = next;
 		}
 		buf->text_last = NULL;
@@ -4638,7 +4638,7 @@ gtk_xtext_append_indent (xtext_buffer *buf,
 	if (right_text[right_len-1] == '\n')
 		right_len--;
 
-	ent = malloc (left_len + right_len + 2 + sizeof (textentry));
+	ent = g_malloc (left_len + right_len + 2 + sizeof (textentry));
 	str = (unsigned char *) ent + sizeof (textentry);
 
 	memcpy (str, left_text, left_len);
@@ -4693,7 +4693,7 @@ gtk_xtext_append (xtext_buffer *buf, unsigned char *text, int len)
 	if (len >= sizeof (buf->xtext->scratch_buffer))
 		len = sizeof (buf->xtext->scratch_buffer) - 1;
 
-	ent = malloc (len + 1 + sizeof (textentry));
+	ent = g_malloc (len + 1 + sizeof (textentry));
 	ent->str = (unsigned char *) ent + sizeof (textentry);
 	ent->str_len = len;
 	if (len)
@@ -4988,7 +4988,7 @@ gtk_xtext_buffer_free (xtext_buffer *buf)
 	while (ent)
 	{
 		next = ent->next;
-		free (ent);
+		g_free (ent);
 		ent = next;
 	}
 
