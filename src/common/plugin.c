@@ -170,7 +170,7 @@ xit:
 	}
 	if (pl->filename)
 		free ((char *)pl->filename);
-	free (pl);
+	g_free (pl);
 
 	plugin_list = g_slist_remove (plugin_list, pl);
 
@@ -188,7 +188,7 @@ plugin_list_add (hexchat_context *ctx, char *filename, const char *name,
 {
 	hexchat_plugin *pl;
 
-	pl = malloc (sizeof (hexchat_plugin));
+	pl = g_new (hexchat_plugin, 1);
 	pl->handle = handle;
 	pl->filename = filename;
 	pl->context = ctx;
@@ -596,7 +596,7 @@ xit:
 		if (!hook || hook->type == HOOK_DELETED)
 		{
 			hook_list = g_slist_remove (hook_list, hook);
-			free (hook);
+			g_free (hook);
 		}
 		list = next;
 	}
@@ -796,9 +796,7 @@ plugin_add_hook (hexchat_plugin *pl, int type, int pri, const char *name,
 {
 	hexchat_hook *hook;
 
-	hook = malloc (sizeof (hexchat_hook));
-	memset (hook, 0, sizeof (hexchat_hook));
-
+	hook = g_new0 (hexchat_hook, 1);
 	hook->type = type;
 	hook->pri = pri;
 	if (name)
@@ -1263,7 +1261,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 {
 	hexchat_list *list;
 
-	list = malloc (sizeof (hexchat_list));
+	list = g_new0 (hexchat_list, 1);
 	list->pos = NULL;
 
 	switch (str_hash (name))
@@ -1299,7 +1297,7 @@ hexchat_list_get (hexchat_plugin *ph, const char *name)
 		}	/* fall through */
 
 	default:
-		free (list);
+		g_free (list);
 		return NULL;
 	}
 
@@ -1311,7 +1309,7 @@ hexchat_list_free (hexchat_plugin *ph, hexchat_list *xlist)
 {
 	if (xlist->type == LIST_USERS)
 		g_slist_free (xlist->head);
-	free (xlist);
+	g_free (xlist);
 }
 
 int
@@ -1909,7 +1907,7 @@ hexchat_pluginpref_get_str (hexchat_plugin *pl, const char *var, char *dest)
 	}
 
 	fstat (fh, &st);
-	cfg = malloc (st.st_size + 1);
+	cfg = g_malloc (st.st_size + 1);
 
 	if (!cfg)
 	{
@@ -1927,12 +1925,12 @@ hexchat_pluginpref_get_str (hexchat_plugin *pl, const char *var, char *dest)
 
 	if (!cfg_get_str (cfg, var, dest, 512)) /* dest_len is the same as buffer size in set */
 	{
-		free (cfg);
+		g_free (cfg);
 		close (fh);
 		return 0;
 	}
 
-	free (cfg);
+	g_free (cfg);
 	close (fh);
 	return 1;
 }

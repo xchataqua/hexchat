@@ -409,7 +409,7 @@ dcc_close (struct DCC *dcc, int dccstat, int destroy)
 	dcc->dccstat = dccstat;
 	if (dcc->dccchat)
 	{
-		free (dcc->dccchat);
+		g_free (dcc->dccchat);
 		dcc->dccchat = NULL;
 	}
 
@@ -418,13 +418,13 @@ dcc_close (struct DCC *dcc, int dccstat, int destroy)
 		dcc_list = g_slist_remove (dcc_list, dcc);
 		fe_dcc_remove (dcc);
 		if (dcc->proxy)
-			free (dcc->proxy);
+			g_free (dcc->proxy);
 		if (dcc->file)
 			free (dcc->file);
 		if (dcc->destfile)
 			g_free (dcc->destfile);
 		free (dcc->nick);
-		free (dcc);
+		g_free (dcc);
 		return;
 	}
 
@@ -893,7 +893,7 @@ dcc_connect_finished (GIOChannel *source, GIOCondition condition, struct DCC *dc
 		dcc_open_query (dcc->serv, dcc->nick);
 	case TYPE_CHATRECV:	/* normal chat */
 		dcc->iotag = fe_input_add (dcc->sok, FIA_READ|FIA_EX, dcc_read_chat, dcc);
-		dcc->dccchat = malloc (sizeof (struct dcc_chat));
+		dcc->dccchat = g_new0 (struct dcc_chat, 1);
 		dcc->dccchat->pos = 0;
 		EMIT_SIGNAL (XP_TE_DCCCONCHAT, dcc->serv->front_session,
 						 dcc->nick, host, NULL, NULL, 0);
@@ -1373,14 +1373,7 @@ dcc_proxy_connect (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 	if (!dcc_did_connect (source, condition, dcc))
 		return TRUE;
 
-	dcc->proxy = malloc (sizeof (struct proxy_state));
-	if (!dcc->proxy)
-	{
-		dcc->dccstat = STAT_FAILED;
-		fe_dcc_update (dcc);
-		return TRUE;
-	}
-	memset (dcc->proxy, 0, sizeof (struct proxy_state));
+	dcc->proxy = g_new0 (struct proxy_state, 1);
 
 	switch (prefs.hex_net_proxy_type)
 	{
@@ -1469,9 +1462,7 @@ dcc_send_data (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 	else if (!dcc->wiotag)
 		dcc->wiotag = fe_input_add (sok, FIA_WRITE, dcc_send_data, dcc);
 
-	buf = malloc (prefs.hex_dcc_blocksize);
-	if (!buf)
-		return TRUE;
+	buf = g_malloc (prefs.hex_dcc_blocksize);
 
 	lseek (dcc->fp, dcc->pos, SEEK_SET);
 	len = read (dcc->fp, buf, prefs.hex_dcc_blocksize);
@@ -1482,7 +1473,7 @@ dcc_send_data (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 	if (sent < 0 && !(would_block ()))
 	{
 abortit:
-		free (buf);
+		g_free (buf);
 		EMIT_SIGNAL (XP_TE_DCCSENDFAIL, dcc->serv->front_session,
 						 file_part (dcc->file), dcc->nick,
 						 errorstring (sock_error ()), NULL, 0);
@@ -1506,7 +1497,7 @@ abortit:
 		}
 	}
 
-	free (buf);
+	g_free (buf);
 
 	return TRUE;
 }
@@ -1638,7 +1629,7 @@ dcc_accept (GIOChannel *source, GIOCondition condition, struct DCC *dcc)
 	case TYPE_CHATSEND:
 		dcc_open_query (dcc->serv, dcc->nick);
 		dcc->iotag = fe_input_add (dcc->sok, FIA_READ|FIA_EX, dcc_read_chat, dcc);
-		dcc->dccchat = malloc (sizeof (struct dcc_chat));
+		dcc->dccchat = g_new0 (struct dcc_chat, 1);
 		dcc->dccchat->pos = 0;
 		EMIT_SIGNAL (XP_TE_DCCCONCHAT, dcc->serv->front_session,
 						 dcc->nick, host, NULL, NULL, 0);
@@ -2133,10 +2124,7 @@ dcc_get_nick (struct session *sess, char *nick)
 static struct DCC *
 new_dcc (void)
 {
-	struct DCC *dcc = malloc (sizeof (struct DCC));
-	if (!dcc)
-		return 0;
-	memset (dcc, 0, sizeof (struct DCC));
+	struct DCC *dcc = g_new0 (struct DCC, 1);
 	dcc->sok = -1;
 	dcc->fp = -1;
 	dcc_list = g_slist_prepend (dcc_list, dcc);

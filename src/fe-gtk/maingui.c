@@ -1836,7 +1836,7 @@ mg_changui_destroy (session *sess)
 		/* it fixes: Gdk-CRITICAL **: gdk_colormap_get_screen: */
 		/*           assertion `GDK_IS_COLORMAP (cmap)' failed */
 		ret = sess->gui->window;
-		free (sess->gui);
+		g_free (sess->gui);
 		sess->gui = NULL;
 	}
 	return ret;
@@ -3509,8 +3509,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 
 	if (!res)
 	{
-		res = malloc (sizeof (restore_gui));
-		memset (res, 0, sizeof (restore_gui));
+		res = g_new0 (restore_gui, 1);
 	}
 
 	sess->res = res;
@@ -3523,8 +3522,7 @@ mg_changui_new (session *sess, restore_gui *res, int tab, int focus)
 
 	if (!tab)
 	{
-		gui = malloc (sizeof (session_gui));
-		memset (gui, 0, sizeof (session_gui));
+		gui = g_new0 (session_gui, 1);
 		gui->is_tab = FALSE;
 		sess->gui = gui;
 		mg_create_topwindow (sess);
@@ -3649,7 +3647,7 @@ fe_server_callback (server *serv)
 	if (serv->gui->rawlog_window)
 		mg_close_gen (NULL, serv->gui->rawlog_window);
 
-	free (serv->gui);
+	g_free (serv->gui);
 }
 
 /* called when a session is being killed */
@@ -3686,8 +3684,8 @@ fe_session_callback (session *sess)
 		fe_timeout_remove (sess->gui->bartag);
 
 	if (sess->gui != &static_mg_gui)
-		free (sess->gui);
-	free (sess->res);
+		g_free (sess->gui);
+	g_free (sess->res);
 }
 
 /* ===== DRAG AND DROP STUFF ===== */

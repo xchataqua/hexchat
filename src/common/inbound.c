@@ -1455,8 +1455,7 @@ inbound_user_info (session *sess, char *chan, char *user, char *host,
 
 	if (user && host)
 	{
-		uhost = g_malloc (strlen (user) + strlen (host) + 2);
-		sprintf (uhost, "%s@%s", user, host);
+		uhost = g_strdup_printf ("%s@%s", user, host);
 	}
 
 	if (chan)

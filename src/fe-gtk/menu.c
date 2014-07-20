@@ -137,7 +137,7 @@ nick_command_parse (session *sess, char *cmd, char *nick, char *allnick)
 
 	/* this can't overflow, since popup->cmd is only 256 */
 	len = strlen (cmd) + strlen (nick) + strlen (allnick) + 512;
-	buf = malloc (len);
+	buf = g_malloc (len);
 
 	auto_insert (buf, len, cmd, 0, 0, allnick, sess->channel, "",
 					 server_get_network (sess->server, TRUE), host,
@@ -145,7 +145,7 @@ nick_command_parse (session *sess, char *cmd, char *nick, char *allnick)
 
 	nick_command (sess, buf);
 
-	free (buf);
+	g_free (buf);
 }
 
 /* userlist button has been clicked */
@@ -166,11 +166,12 @@ userlist_button_cb (GtkWidget * button, char *cmd)
 	if (sess->type == SESS_DIALOG)
 	{
 		/* fake a selection */
-		nicks = malloc (sizeof (char *) * 2);
+		nicks = g_new (char *, 2);
 		nicks[0] = g_strdup (sess->channel);
 		nicks[1] = NULL;
 		num_sel = 1;
-	} else
+	}
+	else
 	{
 		/* find number of selected rows */
 		nicks = userlist_selection_list (sess->gui->user_tree, &num_sel);
@@ -179,13 +180,13 @@ userlist_button_cb (GtkWidget * button, char *cmd)
 			nick_command_parse (sess, cmd, "", "");
 
 			if (nicks)
-				free (nicks);
+				g_free (nicks);
 			return;
 		}
 	}
 
 	/* create "allnicks" string */
-	allnicks = malloc (((NICKLEN + 1) * num_sel) + 1);
+	allnicks = g_malloc (((NICKLEN + 1) * num_sel) + 1);
 	*allnicks = 0;
 
 	i = 0;
@@ -218,8 +219,8 @@ userlist_button_cb (GtkWidget * button, char *cmd)
 		g_free (nicks[num_sel]);
 	}
 
-	free (nicks);
-	free (allnicks);
+	g_free (nicks);
+	g_free (allnicks);
 }
 
 /* a popup-menu-item has been selected */

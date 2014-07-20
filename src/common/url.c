@@ -124,11 +124,7 @@ url_add (char *urltext, int len)
 		return;
 	}
 
-	data = malloc (len + 1);
-	if (!data)
-	{
-		return;
-	}
+	data = g_malloc (len + 1);
 	memcpy (data, urltext, len);
 	data[len] = 0;
 
@@ -151,7 +147,7 @@ url_add (char *urltext, int len)
 	/* the URL is saved already, only continue if we need the URL grabber too */
 	if (!prefs.hex_url_grabber)
 	{
-		free (data);
+		g_free (data);
 		return;
 	}
 
@@ -163,7 +159,7 @@ url_add (char *urltext, int len)
 
 	if (url_find (data))
 	{
-		free (data);
+		g_free (data);
 		return;
 	}
 

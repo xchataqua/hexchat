@@ -1405,7 +1405,7 @@ static Hook *
 Plugin_AddHook(int type, PyObject *plugin, PyObject *callback,
 	       PyObject *userdata, char *name, void *data)
 {
-	Hook *hook = (Hook *) g_malloc(sizeof(Hook));
+	Hook *hook = g_malloc(sizeof(Hook));
 	if (hook == NULL) {
 		PyErr_NoMemory();
 		return NULL;
@@ -2532,7 +2532,7 @@ IInterp_Exec(char *command)
 	}
 	d = PyModule_GetDict(m);
 	len = strlen(command);
-	buffer = (char *) g_malloc(len+2);
+	buffer = g_malloc(len+2);
 	if (buffer == NULL) {
 		hexchat_print(ph, "Not enough memory for command buffer");
 		goto fail;

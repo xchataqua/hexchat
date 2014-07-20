@@ -53,7 +53,7 @@ static int ignored_total = 0;
 struct ignore *
 ignore_exists (char *mask)
 {
-	struct ignore *ig = 0;
+	struct ignore *ig = NULL;
 	GSList *list;
 
 	list = ignore_list;
@@ -79,7 +79,7 @@ ignore_exists (char *mask)
 int
 ignore_add (char *mask, int type, gboolean overwrite)
 {
-	struct ignore *ig = 0;
+	struct ignore *ig = NULL;
 	int change_only = FALSE;
 
 	/* first check if it's already ignored */
@@ -88,10 +88,7 @@ ignore_add (char *mask, int type, gboolean overwrite)
 		change_only = TRUE;
 
 	if (!change_only)
-		ig = malloc (sizeof (struct ignore));
-
-	if (!ig)
-		return 0;
+		ig = g_new (struct ignore, 1);
 
 	ig->mask = strdup (mask);
 
@@ -193,7 +190,7 @@ ignore_del (char *mask, struct ignore *ig)
 	{
 		ignore_list = g_slist_remove (ignore_list, ig);
 		free (ig->mask);
-		free (ig);
+		g_free (ig);
 		fe_ignore_update (1);
 		return TRUE;
 	}
@@ -289,7 +286,7 @@ ignore_load ()
 		fstat (fh, &st);
 		if (st.st_size)
 		{
-			cfg = malloc (st.st_size + 1);
+			cfg = g_malloc (st.st_size + 1);
 			cfg[0] = '\0';
 			i = read (fh, cfg, st.st_size);
 			if (i >= 0)
@@ -297,14 +294,13 @@ ignore_load ()
 			my_cfg = cfg;
 			while (my_cfg)
 			{
-				ignore = malloc (sizeof (struct ignore));
-				memset (ignore, 0, sizeof (struct ignore));
+				ignore = g_new0 (struct ignore, 1);
 				if ((my_cfg = ignore_read_next_entry (my_cfg, ignore)))
 					ignore_list = g_slist_prepend (ignore_list, ignore);
 				else
-					free (ignore);
+					g_free (ignore);
 			}
-			free (cfg);
+			g_free (cfg);
 		}
 		close (fh);
 	}

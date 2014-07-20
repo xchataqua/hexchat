@@ -104,14 +104,8 @@ sha256_file (char *path, char outputBuffer[65])
 	}
 
 	SHA256_Init (&sha256);
-	buffer = malloc (BUFSIZE);
+	buffer = g_malloc (BUFSIZE);
 	bytesRead = 0;
-
-	if (!buffer)
-	{
-		fclose (file);
-		return ENOMEM;
-	}
 
 	while ((bytesRead = fread (buffer, 1, BUFSIZE, file)))
 	{
@@ -122,7 +116,7 @@ sha256_file (char *path, char outputBuffer[65])
 	sha256_hash_string (hash, outputBuffer);
 
 	fclose (file);
-	free (buffer);
+	g_free (buffer);
 	return 0;
 }
 

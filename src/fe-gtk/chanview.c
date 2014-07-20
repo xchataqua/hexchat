@@ -231,7 +231,7 @@ chanview_free_ch (chanview *cv, GtkTreeIter *iter)
 	chan *ch;
 
 	gtk_tree_model_get (GTK_TREE_MODEL (cv->store), iter, COL_CHAN, &ch, -1);
-	free (ch);
+	g_free (ch);
 }
 
 static void
@@ -251,7 +251,7 @@ chanview_destroy (chanview *cv)
 		gtk_widget_destroy (cv->box);
 
 	chanview_destroy_store (cv);
-	free (cv);
+	g_free (cv);
 }
 
 static void
@@ -267,7 +267,7 @@ chanview_new (int type, int trunc_len, gboolean sort, gboolean use_icons,
 {
 	chanview *cv;
 
-	cv = calloc (1, sizeof (chanview));
+	cv = g_new0 (chanview, 1);
 	cv->store = gtk_tree_store_new (4, G_TYPE_STRING, G_TYPE_POINTER,
 											  PANGO_TYPE_ATTR_LIST, GDK_TYPE_PIXBUF);
 	cv->style = style;
@@ -368,7 +368,7 @@ chanview_add_real (chanview *cv, char *name, void *family, void *userdata,
 
 	if (!ch)
 	{
-		ch = calloc (1, sizeof (chan));
+		ch = g_new0 (chan, 1);
 		ch->userdata = userdata;
 		ch->family = family;
 		ch->cv = cv;

@@ -2105,7 +2105,7 @@ gtk_xtext_selection_get_text (GtkXText *xtext, int *len_ret)
 		return NULL;
 
 	/* now allocate mem and copy buffer */
-	pos = txt = malloc (len);
+	pos = txt = g_malloc (len);
 	ent = buf->last_ent_start;
 	while (ent)
 	{
@@ -2145,10 +2145,11 @@ gtk_xtext_selection_get_text (GtkXText *xtext, int *len_ret)
 		/*stripped = gtk_xtext_conv_color (txt, strlen (txt), &len);*/
 		stripped = txt;
 		len = strlen (txt);
-	} else
+	}
+	else
 	{
 		stripped = gtk_xtext_strip_color (txt, strlen (txt), NULL, &len, NULL, FALSE);
-		free (txt);
+		g_free (txt);
 	}
 
 	*len_ret = len;
@@ -2358,7 +2359,7 @@ xtext_do_chunk(chunk_t *c)
 	if (c->len1 == 0)
 		return;
 
-	meta = malloc (sizeof *meta);
+	meta = g_new (offlen_t, 1);
 	meta->off = c->off1;
 	meta->len = c->len1;
 	meta->emph = c->emph;
@@ -2473,7 +2474,7 @@ gtk_xtext_text_width_ent (GtkXText *xtext, textentry *ent)
 
 	if (ent->slp)
 	{
-		g_slist_free_full (ent->slp, free);
+		g_slist_free_full (ent->slp, g_free);
 		ent->slp = NULL;
 	}
 
@@ -4957,8 +4958,7 @@ gtk_xtext_buffer_new (GtkXText *xtext)
 {
 	xtext_buffer *buf;
 
-	buf = malloc (sizeof (xtext_buffer));
-	memset (buf, 0, sizeof (xtext_buffer));
+	buf = g_new0 (xtext_buffer, 1);
 	buf->old_value = -1;
 	buf->xtext = xtext;
 	buf->scrollbar_down = TRUE;
@@ -4992,5 +4992,5 @@ gtk_xtext_buffer_free (xtext_buffer *buf)
 		ent = next;
 	}
 
-	free (buf);
+	g_free (buf);
 }

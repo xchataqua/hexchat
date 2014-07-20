@@ -1002,14 +1002,14 @@ mdehop_cb (struct User *user, multidata *data)
 static int
 cmd_mdehop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char **nicks = malloc (sizeof (char *) * sess->hops);
+	char **nicks = g_new0 (char *, sess->hops);
 	multidata data;
 
 	data.nicks = nicks;
 	data.i = 0;
 	tree_foreach (sess->usertree, (tree_traverse_func *)mdehop_cb, &data);
 	send_channel_modes (sess, tbuf, nicks, 0, data.i, '-', 'h', 0);
-	free (nicks);
+	g_free (nicks);
 
 	return TRUE;
 }
@@ -1028,14 +1028,14 @@ mdeop_cb (struct User *user, multidata *data)
 static int
 cmd_mdeop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char **nicks = malloc (sizeof (char *) * sess->ops);
+	char **nicks = g_new0(char *, sess->ops);
 	multidata data;
 
 	data.nicks = nicks;
 	data.i = 0;
 	tree_foreach (sess->usertree, (tree_traverse_func *)mdeop_cb, &data);
 	send_channel_modes (sess, tbuf, nicks, 0, data.i, '-', 'o', 0);
-	free (nicks);
+	g_free (nicks);
 
 	return TRUE;
 }
@@ -1056,7 +1056,7 @@ menu_free (menu_entry *me)
 		free (me->group);
 	if (me->icon)
 		free (me->icon);
-	free (me);
+	g_free (me);
 }
 
 /* strings equal? but ignore underscores */
@@ -1193,7 +1193,7 @@ menu_add (char *path, char *label, char *cmd, char *ucmd, int pos, int state, in
 		return;
 	}
 
-	me = malloc (sizeof (menu_entry));
+	me = g_new (menu_entry, 1);
 	me->pos = pos;
 	me->modifier = mod;
 	me->is_main = menu_is_mainmenu_root (path, &me->root_offset);
@@ -1531,11 +1531,10 @@ cmd_execw (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		return FALSE;
 	}
 	len = strlen(word_eol[2]);
-	temp = malloc(len + 2);
-	sprintf(temp, "%s\n", word_eol[2]);
+	temp = g_strconcat (word_eol[2], "\n", NULL);
 	PrintText(sess, temp);
 	write(sess->running_exec->myfd, temp, len + 1);
-	free(temp);
+	g_free(temp);
 
 	return TRUE;
 }
@@ -1559,7 +1558,7 @@ exec_handle_colors (char *buf, int len)
 	if (strchr (buf, 27) == 0)
 		return;
 
-	nbuf = malloc (len + 1);
+	nbuf = g_malloc (len + 1);
 
 	while (i < len)
 	{
@@ -1653,7 +1652,7 @@ norm:			nbuf[j] = buf[i];
 
 	nbuf[j] = 0;
 	memcpy (buf, nbuf, j + 1);
-	free (nbuf);
+	g_free (nbuf);
 }
 
 #ifndef HAVE_MEMRCHR
@@ -1803,8 +1802,7 @@ cmd_exec (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			return FALSE;
 		}
 #endif
-		s = (struct nbexec *) malloc (sizeof (struct nbexec));
-		memset(s, 0, sizeof(*s));
+		s = g_new0 (struct nbexec, 1);
 		s->myfd = fds[0];
 		s->tochannel = tochannel;
 		s->sess = sess;
@@ -1851,8 +1849,9 @@ cmd_exec (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 			PrintText (sess, "Error in fork(2)\n");
 			close(fds[0]);
 			close(fds[1]);
-			free (s);
-		} else
+			g_free (s);
+		}
+		else
 		{
 			/* Parent path */
 			close(fds[1]);
@@ -1945,7 +1944,7 @@ get_bool_cb (int val, getvalinfo *info)
 		handle_command (info->sess, buf, FALSE);
 
 	free (info->cmd);
-	free (info);
+	g_free (info);
 }
 
 static int
@@ -1956,7 +1955,7 @@ cmd_getbool (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	info = malloc (sizeof (*info));
+	info = g_new (getvalinfo, 1);
 	info->cmd = strdup (word[2]);
 	info->sess = sess;
 
@@ -1978,7 +1977,7 @@ get_int_cb (int cancel, int val, getvalinfo *info)
 	}
 
 	free (info->cmd);
-	free (info);
+	g_free (info);
 }
 
 static int
@@ -1989,7 +1988,7 @@ cmd_getint (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	info = malloc (sizeof (*info));
+	info = g_new (getvalinfo, 1);
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
@@ -2062,7 +2061,7 @@ get_str_cb (int cancel, char *val, getvalinfo *info)
 	}
 
 	free (info->cmd);
-	free (info);
+	g_free (info);
 }
 
 static int
@@ -2073,7 +2072,7 @@ cmd_getstr (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	if (!word[4][0])
 		return FALSE;
 
-	info = malloc (sizeof (*info));
+	info = g_new (getvalinfo, 1);
 	info->cmd = strdup (word[3]);
 	info->sess = sess;
 
@@ -2200,7 +2199,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	} else
 	{
 		struct popup *pop;
-		char *buf = malloc (4096);
+		char *buf = g_malloc (4096);
 		help_list hl;
 
 		hl.longfmt = longfmt;
@@ -2245,7 +2244,7 @@ cmd_help (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 		plugin_command_foreach (sess, &hl, (void *)show_help_line);
 		strcat (buf, "\n");
 		PrintText (sess, buf);
-		free (buf);
+		g_free (buf);
 
 		PrintTextf (sess, "\n%s\n\n", _("Type /HELP <command> for more information, or /HELP -l"));
 	}
@@ -2721,7 +2720,7 @@ mop_cb (struct User *user, multidata *data)
 static int
 cmd_mop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 {
-	char **nicks = malloc (sizeof (char *) * (sess->total - sess->ops));
+	char **nicks = g_new0 (char *, sess->total - sess->ops);
 	multidata data;
 
 	data.nicks = nicks;
@@ -2729,7 +2728,7 @@ cmd_mop (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 	tree_foreach (sess->usertree, (tree_traverse_func *)mop_cb, &data);
 	send_channel_modes (sess, tbuf, nicks, 0, data.i, '+', 'o', 0);
 
-	free (nicks);
+	g_free (nicks);
 
 	return TRUE;
 }
@@ -4311,7 +4310,7 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 	if (!len)
 		return;
 
-	buf = malloc (len + 1);
+	buf = g_malloc (len + 1);
 
 	if (buf)
 	{
@@ -4384,7 +4383,7 @@ check_special_chars (char *cmd, int do_ascii) /* check for %X */
 		buf[i] = 0;
 		if (occur)
 			strcpy (cmd, buf);
-		free (buf);
+		g_free (buf);
 	}
 }
 
@@ -4485,12 +4484,10 @@ handle_say (session *sess, char *text, int check_spch)
 	struct DCC *dcc;
 	char *word[PDIWORDS+1];
 	char *word_eol[PDIWORDS+1];
-	char pdibuf_static[1024];
-	char newcmd_static[1024];
-	char *pdibuf = pdibuf_static;
-	char *newcmd = newcmd_static;
+	char *pdibuf;
+	char *newcmd;
 	int len;
-	int newcmdlen = sizeof newcmd_static;
+	int newcmdlen;
 	message_tags_data no_tags = MESSAGE_TAGS_DATA_INIT;
 
 	if (strcmp (sess->channel, "(lastlog)") == 0)
@@ -4500,11 +4497,8 @@ handle_say (session *sess, char *text, int check_spch)
 	}
 
 	len = strlen (text);
-	if (len >= sizeof pdibuf_static)
-		pdibuf = malloc (len + 1);
-
-	if (len + NICKLEN >= newcmdlen)
-		newcmd = malloc (newcmdlen = len + NICKLEN + 1);
+	pdibuf = g_malloc (len + 1);
+	newcmd = g_malloc (newcmdlen = len + NICKLEN + 1);
 
 	if (check_spch && prefs.hex_input_perc_color)
 		check_special_chars (text, prefs.hex_input_perc_ascii);
@@ -4577,11 +4571,9 @@ handle_say (session *sess, char *text, int check_spch)
 	}
 
 xit:
-	if (pdibuf != pdibuf_static)
-		free (pdibuf);
+	g_free (pdibuf);
 
-	if (newcmd != newcmd_static)
-		free (newcmd);
+	g_free (newcmd);
 }
 
 char *
@@ -4675,8 +4667,6 @@ handle_command (session *sess, char *cmd, int check_spch)
 	char *word_eol[PDIWORDS+1];
 	static int command_level = 0;
 	struct commands *int_cmd;
-	char pdibuf_static[1024];
-	char tbuf_static[TBUFSIZE];
 	char *pdibuf;
 	char *tbuf;
 	int len;
@@ -4691,23 +4681,8 @@ handle_command (session *sess, char *cmd, int check_spch)
 	/* anything below MUST DEC command_level before returning */
 
 	len = strlen (cmd);
-	if (len >= sizeof (pdibuf_static))
-	{
-		pdibuf = malloc (len + 1);
-	}
-	else
-	{
-		pdibuf = pdibuf_static;
-	}
-
-	if ((len * 2) >= sizeof (tbuf_static))
-	{
-		tbuf = malloc ((len * 2) + 1);
-	}
-	else
-	{
-		tbuf = tbuf_static;
-	}
+	pdibuf = g_malloc (len + 1);
+	tbuf = g_malloc ((len * 2) + 1);
 
 	/* split the text into words and word_eol */
 	process_data_init (pdibuf, cmd, word, word_eol, TRUE, TRUE);
@@ -4800,15 +4775,8 @@ handle_command (session *sess, char *cmd, int check_spch)
 xit:
 	command_level--;
 
-	if (pdibuf != pdibuf_static)
-	{
-		free (pdibuf);
-	}
-
-	if (tbuf != tbuf_static)
-	{
-		free (tbuf);
-	}
+	g_free (pdibuf);
+	g_free (tbuf);
 
 	return ret;
 }

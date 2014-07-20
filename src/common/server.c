@@ -213,7 +213,7 @@ tcp_send_queue (server *serv)
 
 				buf--;
 				serv->outbound_queue = g_slist_remove (serv->outbound_queue, buf);
-				free (buf);
+				g_free (buf);
 				list = serv->outbound_queue;
 			} else
 			{
@@ -235,7 +235,7 @@ tcp_send_len (server *serv, char *buf, int len)
 	if (!prefs.hex_net_throttle)
 		return server_send_real (serv, buf, len);
 
-	dbuf = malloc (len + 2);	/* first byte is the priority */
+	dbuf = g_malloc (len + 2);	/* first byte is the priority */
 	dbuf[0] = 2;	/* pri 2 for most things */
 	memcpy (dbuf + 1, buf, len);
 	dbuf[len + 1] = 0;
@@ -529,7 +529,7 @@ server_close_pipe (int *pipefd)	/* see comments below */
 {
 	close (pipefd[0]);	/* close WRITE end first to cause an EOF on READ */
 	close (pipefd[1]);	/* in giowin32, and end that thread. */
-	free (pipefd);
+	g_free (pipefd);
 	return FALSE;
 }
 
@@ -562,7 +562,7 @@ server_stopconnecting (server * serv)
 
 	{
 		/* if we close the pipe now, giowin32 will crash. */
-		int *pipefd = malloc (sizeof (int) * 2);
+		int *pipefd = g_new (int, 2);
 		pipefd[0] = serv->childwrite;
 		pipefd[1] = serv->childread;
 		g_idle_add ((GSourceFunc)server_close_pipe, pipefd);
@@ -1270,7 +1270,7 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 
 	addrlen = strlen (serverAddr);
 	packetlen = 4 + 1 + addrlen + 2;
-	sc2 = malloc (packetlen);
+	sc2 = g_malloc (packetlen);
 	sc2[0] = 5;						  /* version */
 	sc2[1] = 1;						  /* command */
 	sc2[2] = 0;						  /* reserved */
@@ -1279,7 +1279,7 @@ traverse_socks5 (int print_fd, int sok, char *serverAddr, int port)
 	memcpy (sc2 + 5, serverAddr, addrlen);
 	*((unsigned short *) (sc2 + 5 + addrlen)) = htons (port);
 	send (sok, sc2, packetlen, 0);
-	free (sc2);
+	g_free (sc2);
 
 	/* consume all of the reply */
 	if (recv (sok, buf, 4, 0) != 4)
@@ -1848,8 +1848,7 @@ server_new (void)
 	static int id = 0;
 	server *serv;
 
-	serv = malloc (sizeof (struct server));
-	memset (serv, 0, sizeof (struct server));
+	serv = g_new0 (struct server, 1);
 
 	/* use server.c and proto-irc.c functions */
 	server_fill_her_up (serv);
@@ -1993,7 +1992,7 @@ server_away_free_messages (server *serv)
 			away_list = g_slist_remove (away_list, away);
 			if (away->message)
 				free (away->message);
-			free (away);
+			g_free (away);
 			next = away_list;
 		}
 		list = next;
@@ -2010,17 +2009,15 @@ server_away_save_message (server *serv, char *nick, char *msg)
 		if (away->message)
 			free (away->message);
 		away->message = strdup (msg);
-	} else
-		/* Create brand new entry */
+	}
+	else
 	{
-		away = malloc (sizeof (struct away_msg));
-		if (away)
-		{
-			away->server = serv;
-			safe_strcpy (away->nick, nick, sizeof (away->nick));
-			away->message = strdup (msg);
-			away_list = g_slist_prepend (away_list, away);
-		}
+		/* Create brand new entry */
+		away = g_new(struct away_msg, 1);
+		away->server = serv;
+		safe_strcpy (away->nick, nick, sizeof (away->nick));
+		away->message = strdup (msg);
+		away_list = g_slist_prepend (away_list, away);
 	}
 }
 
@@ -2050,7 +2047,7 @@ server_free (server *serv)
 
 	fe_server_callback (serv);
 
-	free (serv);
+	g_free (serv);
 
 	notify_cleanup ();
 }

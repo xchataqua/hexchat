@@ -65,7 +65,7 @@ list_addentry (GSList ** list, char *cmd, char *name)
 		cmd_len = strlen (cmd) + 1;
 	name_len = strlen (name) + 1;
 
-	pop = malloc (sizeof (struct popup) + cmd_len + name_len);
+	pop = g_malloc (sizeof (struct popup) + cmd_len + name_len);
 	pop->name = (char *) pop + sizeof (struct popup);
 	pop->cmd = pop->name + name_len;
 
@@ -137,13 +137,13 @@ list_loadconf (char *file, GSList ** list, char *defaultconf)
 		abort ();
 	}
 
-	ibuf = malloc (st.st_size);
+	ibuf = g_malloc (st.st_size);
 	read (fd, ibuf, st.st_size);
 	close (fd);
 
 	list_load_from_data (list, ibuf, st.st_size);
 
-	free (ibuf);
+	g_free (ibuf);
 }
 
 void
@@ -153,7 +153,7 @@ list_free (GSList ** list)
 	while (*list)
 	{
 		data = (void *) (*list)->data;
-		free (data);
+		g_free (data);
 		*list = g_slist_remove (*list, data);
 	}
 }
@@ -1231,7 +1231,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 				if (erase || *val)
 				{
 					/* save the previous value until we print it out */
-					prev_string = (char*) malloc (vars[i].len + 1);
+					prev_string = g_malloc (vars[i].len + 1);
 					strncpy (prev_string, (char *) &prefs + vars[i].offset, vars[i].len);
 
 					/* update the variable */
@@ -1243,7 +1243,7 @@ cmd_set (struct session *sess, char *tbuf, char *word[], char *word_eol[])
 						PrintTextf (sess, "%s set to: %s (was: %s)\n", var, (char *) &prefs + vars[i].offset, prev_string);
 					}
 
-					free (prev_string);
+					g_free (prev_string);
 				}
 				else
 				{

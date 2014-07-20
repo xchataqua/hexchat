@@ -464,12 +464,7 @@ session_new (server *serv, char *from, int type, int focus)
 {
 	session *sess;
 
-	sess = malloc (sizeof (struct session));
-	if (sess == NULL)
-	{
-		return NULL;
-	}
-	memset (sess, 0, sizeof (struct session));
+	sess = g_new0 (struct session, 1);
 
 	sess->server = serv;
 	sess->logfd = -1;
@@ -670,7 +665,7 @@ session_free (session *killsess)
 			current_sess = sess_list->data;
 	}
 
-	free (killsess);
+	g_free (killsess);
 
 	if (!sess_list && !in_hexchat_exit)
 		hexchat_exit ();						/* sess_list is empty, quit! */

@@ -374,12 +374,13 @@ mode_cat (char *str, char *addition)
 	if (str)
 	{
 		len = strlen (str) + strlen (addition) + 2;
-		str = realloc (str, len);
+		str = g_realloc (str, len);
 		strcat (str, " ");
 		strcat (str, addition);
-	} else
+	}
+	else
 	{
-		str = strdup (addition);
+		str = g_strdup (addition);
 	}
 
 	return str;
@@ -560,12 +561,12 @@ handle_single_mode (mode_run *mr, char sign, char mode, char *nick,
 	{
 		if (*arg)
 		{
-			char *buf = malloc (strlen (chan) + strlen (arg) + 2);
-			sprintf (buf, "%s %s", chan, arg);
+			char *buf = g_strdup_printf ("%s %s", chan, arg);
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
 										  outbuf + 2, buf, 0, tags_data->timestamp);
-			free (buf);
-		} else
+			g_free (buf);
+		}
+		else
 			EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANMODEGEN, sess, nick, outbuf,
 										  outbuf + 2, chan, 0, tags_data->timestamp);
 	}
@@ -635,7 +636,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANOP, sess, nick, mr->op, NULL, NULL, 0,
 									  tags_data->timestamp);
-		free (mr->op);
+		g_free(mr->op);
 		mr->op = NULL;
 	}
 
@@ -643,7 +644,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEOP, sess, nick, mr->deop, NULL, NULL,
 									  0, tags_data->timestamp);
-		free (mr->deop);
+		g_free(mr->deop);
 		mr->deop = NULL;
 	}
 
@@ -651,7 +652,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANVOICE, sess, nick, mr->voice, NULL, NULL,
 									  0, tags_data->timestamp);
-		free (mr->voice);
+		g_free(mr->voice);
 		mr->voice = NULL;
 	}
 
@@ -659,7 +660,7 @@ mode_print_grouped (session *sess, char *nick, mode_run *mr,
 	{
 		EMIT_SIGNAL_TIMESTAMP (XP_TE_CHANDEVOICE, sess, nick, mr->devoice, NULL,
 									  NULL, 0, tags_data->timestamp);
-		free (mr->devoice);
+		g_free(mr->devoice);
 		mr->devoice = NULL;
 	}
 }

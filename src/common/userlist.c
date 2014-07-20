@@ -183,7 +183,7 @@ free_user (struct User *user, gpointer data)
 		free (user->servername);
 	if (user->account)
 		free (user->account);
-	free (user);
+	g_free (user);
 
 	return TRUE;
 }
@@ -397,8 +397,7 @@ userlist_add (struct session *sess, char *name, char *hostname,
 
 	notify_set_online (sess->server, name + prefix_chars, tags_data);
 
-	user = malloc (sizeof (struct User));
-	memset (user, 0, sizeof (struct User));
+	user = g_new0 (struct User, 1);
 
 	user->access = acc;
 
@@ -433,7 +432,7 @@ userlist_add (struct session *sess, char *name, char *hostname,
 			free (user->account);
 		if (user->realname)
 			free (user->realname);
-		free (user);
+		g_free (user);
 		return;
 	}
 

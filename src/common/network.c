@@ -68,7 +68,7 @@ net_store_destroy (netstore * ns)
 	if (ns->ip6_hostent)
 		freeaddrinfo (ns->ip6_hostent);
 #endif
-	free (ns);
+	g_free (ns);
 }
 
 netstore *
@@ -76,8 +76,7 @@ net_store_new (void)
 {
 	netstore *ns;
 
-	ns = malloc (sizeof (netstore));
-	memset (ns, 0, sizeof (netstore));
+	ns = g_new0 (netstore, 1);
 
 	return ns;
 }
@@ -310,14 +309,12 @@ net_store_fill_any (netstore *ns)
 
 	ai = ns->ip6_hostent;
 	if (!ai) {
-		ai = malloc (sizeof (struct addrinfo));
-		memset (ai, 0, sizeof (struct addrinfo));
+		ai = g_new0 (struct addrinfo, 1);
 		ns->ip6_hostent = ai;
 	}
 	sin = (struct sockaddr_in *)ai->ai_addr;
 	if (!sin) {
-		sin = malloc (sizeof (struct sockaddr_in));
-		memset (sin, 0, sizeof (struct sockaddr_in));
+		sin = g_new0 (struct sockaddr_in, 1);
 		ai->ai_addr = (struct sockaddr *)sin;
 	}
 	ai->ai_family = AF_INET;
@@ -336,14 +333,12 @@ net_store_fill_v4 (netstore *ns, guint32 addr, int port)
 
 	ai = ns->ip6_hostent;
 	if (!ai) {
-		ai = malloc (sizeof (struct addrinfo));
-		memset (ai, 0, sizeof (struct addrinfo));
+		ai = g_new0 (struct addrinfo, 1);
 		ns->ip6_hostent = ai;
 	}
 	sin = (struct sockaddr_in *)ai->ai_addr;
 	if (!sin) {
-		sin = malloc (sizeof (struct sockaddr_in));
-		memset (sin, 0, sizeof (struct sockaddr_in));
+		sin = g_new0 (struct sockaddr_in, 1);
 		ai->ai_addr = (struct sockaddr *)sin;
 	}
 	ai->ai_family = AF_INET;
