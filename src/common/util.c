@@ -252,26 +252,30 @@ expand_homedir (char *file)
 	char *user;
 	struct passwd *pw;
 
-	if (*file == '~')
+	if (file[0] == '~')
 	{
 		if (file[1] == '\0' || file[1] == '/')
-		{
 			return g_strconcat (g_get_home_dir (), &file[1], NULL);
-		}
+
+		char *slash_pos;
+
+		user = g_strdup(file);
+
+		slash_pos = strchr(user, '/');
+		if (slash_pos != NULL)
+			*slash_pos = '\0';
+
+		pw = getpwnam(user + 1);
+		g_free(user);
+
+		if (pw == NULL)
+			return g_strdup(file);
+
+		slash_pos = strchr(file, '/');
+		if (slash_pos == NULL)
+			return g_strdup (pw->pw_dir);
 		else
-		{
-			user = strdup(file);
-			if (strchr(user, '/') != NULL)
-				*(strchr(user, '/')) = '\0';
-			if ((pw = getpwnam(user + 1)) == NULL)
-			{
-				free(user);
-				return g_strdup(file);
-			}
-			free(user);
-			user = strchr(file, '/') != NULL ? strchr(file,'/') : file;
-			return g_strconcat (pw->pw_dir, user, NULL);
-		}
+			return g_strconcat (pw->pw_dir, slash_pos, NULL);
 	}
 #endif
 
