@@ -1579,7 +1579,7 @@ parse_dh (char *str, DH **dh_out, unsigned char **secret_out, int *keysize_out)
 {
 	DH *dh;
 	guchar *data, *decoded_data;
-	guchar *secret;
+	guchar *secret = NULL;
 	gsize data_len;
 	guint size;
 	guint16 size16;
