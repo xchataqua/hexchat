@@ -20,6 +20,8 @@
 #ifndef HEXCHAT_COMMONPLUGIN_H
 #define HEXCHAT_COMMONPLUGIN_H
 
+#include "hexchat-plugin.h"
+
 #ifdef PLUGIN_C
 struct _hexchat_plugin
 {

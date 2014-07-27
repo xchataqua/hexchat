@@ -1052,6 +1052,10 @@ main (int argc, char *argv[])
 	g_type_init ();
 #endif
 
+#if FE_AQUA | FE_AZURE
+    fe_preload();
+#endif
+
 	if (check_config_dir () == 0)
 	{
 		if (load_config () != 0)
